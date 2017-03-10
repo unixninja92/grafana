@@ -28,6 +28,7 @@ export default class InfluxQuery {
       {type: 'fill', params: ['null']},
     ];
     target.select = target.select || [[
+      {type: 'time', params: ['$__interval']},
       {type: 'field', params: ['value']},
       {type: 'mean', params: []},
     ]];
@@ -68,7 +69,13 @@ export default class InfluxQuery {
     if (partCount === 0) {
       this.target.groupBy.push(partModel.part);
     } else if (typePart === 'time') {
-      this.target.groupBy.splice(0, 0, partModel.part);
+      if (this.hasGroupByTime()) {
+        this.target.groupBy.splice(1, 0, 'AND');
+        this.target.groupBy.splice(2, 0, partModel.part);
+      }
+      else {
+        this.target.groupBy.splice(0, 0, partModel.part);
+      }
     } else if (typePart === 'tag') {
       if (this.target.groupBy[partCount-1].type === 'fill') {
         this.target.groupBy.splice(partCount-1, 0, partModel.part);
